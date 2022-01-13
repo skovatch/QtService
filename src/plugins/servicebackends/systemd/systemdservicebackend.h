@@ -15,8 +15,6 @@ class SystemdServiceBackend : public QtService::ServiceBackend
 	Q_OBJECT
 
 public:
-	static const QString DBusObjectPath;
-
 	explicit SystemdServiceBackend(QtService::Service *service);
 
 	int runService(int &argc, char **argv, int flags) override;
@@ -48,6 +46,7 @@ private:
 
 	void prepareWatchdog();
 
+    QString dbusObjectPath() const;
 	QDBusConnection dbusConnection() const;
 	QString dbusId() const;
 	void printDbusError(const QDBusError &error) const;

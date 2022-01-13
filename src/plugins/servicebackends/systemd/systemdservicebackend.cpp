@@ -16,8 +16,6 @@ using namespace QtService;
 
 Q_LOGGING_CATEGORY(logBackend, "qt.service.plugin.systemd.backend")
 
-const QString SystemdServiceBackend::DBusObjectPath = QStringLiteral("/de/skycoder42/QtService/SystemdServiceBackend");
-
 SystemdServiceBackend::SystemdServiceBackend(Service *service) :
 	ServiceBackend{service},
 	_dbusAdapter{new SystemdAdaptor{this}}
@@ -193,7 +191,7 @@ int SystemdServiceBackend::run()
 
 	// register the D-Bus service
 	auto connection = dbusConnection();
-	if (!connection.registerObject(DBusObjectPath, this)) {
+    if (!connection.registerObject(dbusObjectPath(), this)) {
 		printDbusError(connection.lastError());
 		return EXIT_FAILURE;
 	}
@@ -216,7 +214,7 @@ int SystemdServiceBackend::stop()
 	sd_notify(false, "STOPPING=1");
 
 	auto connection = dbusConnection();
-	auto dbusInterface = new systemd{dbusId(), DBusObjectPath, connection, this};
+    auto dbusInterface = new systemd{dbusId(), dbusObjectPath(), connection, this};
 	if (!dbusInterface->isValid()) {
 		printDbusError(connection.lastError());
 		return EXIT_FAILURE;
@@ -254,7 +252,7 @@ int SystemdServiceBackend::reload()
 	sd_notify(false, "RELOADING=1");
 
 	auto connection = dbusConnection();
-	auto dbusInterface = new systemd{dbusId(), DBusObjectPath, connection, this};
+    auto dbusInterface = new systemd{dbusId(), dbusObjectPath(), connection, this};
 	if (!dbusInterface->isValid()) {
 		printDbusError(connection.lastError());
 		return EXIT_FAILURE;
@@ -308,6 +306,17 @@ QDBusConnection SystemdServiceBackend::dbusConnection() const
 		return QDBusConnection::sessionBus();
 	else
 		return QDBusConnection::systemBus();
+}
+
+QString SystemdServiceBackend::dbusObjectPath() const
+{
+    auto dObjectPath = QCoreApplication::organizationName();
+
+    if (dObjectPath.isEmpty()) {
+        dObjectPath = QStringLiteral("/de/skycoder42/QtService/SystemdServiceBackend");
+    }
+
+    return dObjectPath;
 }
 
 QString SystemdServiceBackend::dbusId() const
